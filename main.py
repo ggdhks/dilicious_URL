@@ -9,19 +9,19 @@ from util import ngram
 from util import gib_detect_train
 from pprint import pprint
 
-data_file_name = 'final.txt'        # data collection - 'url, malicious'
+data_file_name = 'final.txt'
 processed_data = 'featured.csv'
 
-'''preprocess data'''
+
 def preprocess_data(filename):
     with open(filename, 'r') as f:
         return preprocess.preprocess(f)
 
-'''preprocess url'''
+
 def preprocess_url(data):
     return preprocess.preprocess_url(data)
 
-'''read ngram table dictionary'''
+
 def read_ngram_table_dict():
     fr_list = []
     with open('ngram_table.txt', 'r') as f:
@@ -30,14 +30,14 @@ def read_ngram_table_dict():
         fr_list.remove(fr_list[0])
         return ngram.get_gram_rank_dict(fr_list)
 
-'''read gibberish model pickle'''
+
 def read_gib_model():
     model_data = pickle.load(open('gib_model.pki', 'rb'))
     model_mat = model_data['mat']
     threshold = model_data['thresh']
     return model_mat, threshold
 
-'''save file'''
+
 def save_file(data):
     with open(processed_data, mode='w') as csv_file:
         fieldnames = ['url', 'is_malicious', 'host', 'core_domain', 'path', 'cctld_number', 'url_entropy', 'url_length',
@@ -69,14 +69,14 @@ def save_file(data):
                 }
             )
 
-'''a url's feature'''
-def get_feartures(url):
-    preprocessed_data = preprocess_url(url)             # preprocess data
-    cctld_object = cctld.ccTLD()                        # create cctld set
-    ngram_table_dict = read_ngram_table_dict()          # read ngram table dictionary
-    model_mat, threshold = read_gib_model()             # read gibberish model
 
-    preprocessed_data[-1] = 1                           # cctld number
+def get_feartures(url):
+    preprocessed_data = preprocess_url(url)
+    cctld_object = cctld.ccTLD()
+    ngram_table_dict = read_ngram_table_dict()
+    model_mat, threshold = read_gib_model()
+
+    preprocessed_data[-1] = 1  # cctld number
     url_entropy = list(entropy.shannon_entropy(preprocessed_data[0]))
     path_entropy = list(entropy.shannon_entropy(preprocessed_data[3]))
     preprocessed_data.extend(url_entropy)
@@ -94,13 +94,13 @@ def get_feartures(url):
 
 
 def main():
-    preprocessed_data = preprocess_data(data_file_name) # preprocess data
-    cctld_object = cctld.ccTLD()                        # create cctld set
-    ngram_table_dict = read_ngram_table_dict()          # read ngram table dictionary
-    model_mat, threshold = read_gib_model()             # read gibberish model
+    preprocessed_data = preprocess_data(data_file_name)
+    cctld_object = cctld.ccTLD()
+    ngram_table_dict = read_ngram_table_dict()
+    model_mat, threshold = read_gib_model()
     for i in preprocessed_data:
         cctld_object.add_cctld(i[-1])
-    cctld_tokens = cctld_object.get_all_tlds_tokens()   # add cctld number
+    cctld_tokens = cctld_object.get_all_tlds_tokens()
 
     for i in preprocessed_data:
         try:
@@ -109,21 +109,17 @@ def main():
             url_entropy = list(entropy.shannon_entropy(i[0]))
             # path_shannon_entropy, path_length, path_norm_entropy
             path_entropy = list(entropy.shannon_entropy(i[4]))
-            i.extend(url_entropy)                      # add entropy of url
-            i.extend(path_entropy)                     # add entropy of path
-            i.extend(ngram.get_rank(ngram_table_dict, i[3])) # add ngram
+            i.extend(url_entropy)
+            i.extend(path_entropy)
+            i.extend(ngram.get_rank(ngram_table_dict, i[3]))
             # print(ngrams_rank_std)
-            gib_value = int(gib_detect_train.avg_transition_prob(i[2], model_mat) > threshold) 
-            i.append(gib_value)                        # add gibberish value
+            gib_value = int(gib_detect_train.avg_transition_prob(i[2], model_mat) > threshold)
+            i.append(gib_value)
         except:
             print(i)
     save_file(preprocessed_data)
 
 
 if __name__ == '__main__':
-    # main()
     print(get_feartures('baidu.com'))
-    '''
-    [2.1972245773362196, 9.0, 0, 0, 9.2, 146.16666666666666, 2154.8, 5.81033561853358, 74.84075687009646, 1536.5090823031278, 1]
-    '''
     # pprint(ngram.caculate_domain_gram('baidubaidahudfjdhklsfjhjbv.com'))

@@ -114,18 +114,5 @@ def get_gram_rank_dict(buffer):
     gram_rank_dict = dict()
     for i in buffer:
         category, rank, gram, freq = i.strip().split('\t')  # e.g., 3,21767,ra3,2
-        gram_rank_dict[gram] = int(rank)                    # e.g., gramRankDic = {'e':1, 'a':2, ...}
+        gram_rank_dict[gram] = int(rank)  # e.g., gramRankDic = {'e':1, 'a':2, ...}
     return gram_rank_dict
-
-    
-
-# 2. Create output file ngram.txt
-'''
-ngram-type  rank    string  frequency
-1           1       e       90000
-2           1       s$      10000
-3           1       pus     1000
-'''
-fw1 = open('ngram_table.txt','w')
-writeNgram(fw1, unigram_dic, bigram_dic, trigram_dic)
-fw1.close()
